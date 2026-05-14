@@ -3,7 +3,7 @@ app:
   name: platformengineering
 image:
   repository: roko1987/platformengineering
-  tag: '481363'
+  tag: 'e4475b'
 containerPort: 80
 service:
   port: 8090
