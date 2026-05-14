@@ -1,14 +1,10 @@
 replicaCount: 1
-
 app:
   name: platformengineering
-
 image:
   repository: roko1987/platformengineering
-  tag: latest
-
+  tag: '481363'
 containerPort: 80
-
 service:
   port: 8090
   targetPort: 80
