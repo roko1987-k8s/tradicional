@@ -13,9 +13,16 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    outputs:
+      commit_id: ${{ steps.vars.outputs.commit_id }}
+
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Declare some variables
-        shell:  bash
+        id: vars
+        shell: bash
         run: |
           echo "COMMIT_ID=${GITHUB_SHA::6}" >> "$GITHUB_ENV"
           echo "commit_id=${GITHUB_SHA::6}" >> "$GITHUB_OUTPUT"
@@ -29,17 +36,19 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v6
         with:
+          context: .
           push: true
-          tags: roko1987/platformengineering:${{ step.vars.outputs.commit_id }}
+          tags: roko1987/platformengineering:${{ steps.vars.outputs.commit_id }}
 
   cd:
     needs: ci
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: modify values files
+      - name: Modify values file
         shell: bash
         run: |
           pip install yq
@@ -50,7 +59,6 @@ jobs:
 
       - name: Commit changes
         run: |
-
           git config --global user.email "github-actions@github.com"
           git config --global user.name "github-actions"
 
