@@ -10,7 +10,7 @@ permissions:
   packages: write
 
 jobs:
-  docker:
+  ci:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,6 +18,7 @@ jobs:
         shell:  bash
         run: |
           echo "COMMIT_ID=${GITHUB_SHA::6}" >> "$GITHUB_ENV"
+          echo "commit_id=${GITHUB_SHA::6}" >> "$GITHUB_OUTPUT"
 
       - name: Login Docker
         uses: docker/login-action@v3
@@ -29,4 +30,31 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: roko1987/platformengineering:${{ env.COMMIT_ID }}
+          tags: roko1987/platformengineering:${{ step.vars.outputs.commit_id }}
+
+  cd:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: modify values files
+        shell: bash
+        run: |
+          pip install yq
+
+          yq -Yi ".image.tag = \"${{ needs.ci.outputs.commit_id }}\"" platformengineering/values.yaml
+
+          cat platformengineering/values.yaml
+
+      - name: Commit changes
+        run: |
+
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+
+          git add platformengineering/values.yaml
+          git commit -m "Update image tag to ${{ needs.ci.outputs.commit_id }}" || echo "No changes"
+
+          git push
